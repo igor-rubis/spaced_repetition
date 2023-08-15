@@ -23,14 +23,6 @@ if (cardsSheet == null) {
   cardsSheet = spreadsheet.insertSheet('Cards');
 }
 
-let wordsPerSessionSheet = spreadsheet.getSheetByName('Words per session');
-if (wordsPerSessionSheet == null) {
-  console.log('Creating sheet: Words per session');
-  wordsPerSessionSheet = spreadsheet.insertSheet('Words per session');
-  wordsPerSessionSheet.getRange(1, 1).setValue(20);
-}
-const wordsPerSession = wordsPerSessionSheet.getRange(1, 1).getValue();
-
 let intervalsSheet = spreadsheet.getSheetByName('Intervals');
 if (intervalsSheet == null) {
   console.log('Creating sheet: Intervals');
