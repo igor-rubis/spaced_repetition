@@ -1,9 +1,215 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <base target="_top">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link href='https://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet'>
+    <style>
+        label {
+            display: inline-block;
+            float: left;
+            font-family: 'Ubuntu';
+        }
+
+        input {
+            width: 160px;
+            box-sizing: border-box;
+            font-family: 'Ubuntu';
+        }
+
+        textarea {
+            font-family: 'Ubuntu';
+        }
+
+        .large.button {
+            width: 145px;
+            height: 50px;
+            font-size: 20px;
+        }
+
+        #question_container, #answer_container {
+            height: 160px;
+            text-align: left;
+            vertical-align: middle;
+            width: 300px;
+            font-family: 'Ubuntu';
+        }
+
+        #root {
+            width: 300px;
+        }
+    </style>
 </head>
 <body>
+<div id="root"></div>
+<script>
+  let baseContainer;
+  init();
 
+  function resetBaseContainer() {
+    baseContainer = document.getElementById('base_container');
+    if (baseContainer != null) baseContainer.remove();
+
+    const newBaseContainer = document.createElement('div');
+    newBaseContainer.id = 'base_container';
+    document.getElementById('root').appendChild(newBaseContainer);
+    baseContainer = document.getElementById('base_container');
+  }
+
+  function addLargeButton(value, onclick) {
+    const largeButton = document.createElement('input');
+    largeButton.type = 'button';
+    largeButton.classList.add('large');
+    largeButton.classList.add('button');
+    largeButton.value = value;
+    largeButton.setAttribute('onclick', onclick);
+    baseContainer.appendChild(largeButton);
+  }
+
+  function addBr() {
+    baseContainer.appendChild(document.createElement('br'));
+  }
+
+  function addInput(label) {
+    const labelElement = document.createElement('label');
+    labelElement.setAttribute('for', label);
+    labelElement.innerText = label;
+    baseContainer.appendChild(labelElement);
+    addBr();
+    const input = document.createElement('textarea');
+    input.id = label;
+    baseContainer.appendChild(input);
+    addBr();
+  }
+
+  function init() {
+    console.log('Initial page');
+    resetBaseContainer();
+    addLargeButton('Add a card', 'addCard()');
+    addBr();
+    addLargeButton('Memorise', 'memorise()');
+  }
+
+  function addCard() {
+    console.log('Add card page');
+    resetBaseContainer();
+    addInput('Question');
+    addBr();
+    addInput('Answer');
+    addBr();
+    addLargeButton('X', 'init()');
+    addLargeButton('Submit', 'submitNewCard()');
+  }
+
+  function getQaValues() {
+    const qe = document.getElementById('Question');
+    const q = qe.value;
+    const ae = document.getElementById('Answer');
+    const a = ae.value;
+    if (q === '' || a === '') {
+      alert('Fill in ALL the fields!');
+      return;
+    }
+    return [q, a];
+  }
+
+  function submitNewCard() {
+    const qa = getQaValues();
+    google.script.run.withSuccessHandler(init).addCard(qa[0], qa[1]);
+  }
+
+  function addCardContainer(card) {
+    let cardContainer = document.getElementById('card_container');
+    if (cardContainer != null) cardContainer.remove();
+
+    const newCardContainer = document.createElement('div');
+    newCardContainer.id = 'card_container';
+    baseContainer.appendChild(newCardContainer);
+    cardContainer = document.getElementById('card_container');
+
+    const questionContainer = document.createElement('div');
+    questionContainer.id = 'question_container';
+    questionContainer.textContent = card[1];
+    questionContainer.style.display = 'table-cell';
+    questionContainer.style['white-space'] = 'pre-wrap';
+    questionContainer.setAttribute('onclick', 'flipQuestion()');
+    cardContainer.appendChild(questionContainer);
+
+    const answerContainer = document.createElement('div');
+    answerContainer.id = 'answer_container';
+    answerContainer.textContent = card[2];
+    answerContainer.style.display = 'none';
+    answerContainer.style['white-space'] = 'pre-wrap';
+    answerContainer.setAttribute('onclick', 'flipAnswer()');
+    cardContainer.appendChild(answerContainer);
+
+    addBr();
+  }
+
+  function flipQuestion() {
+    document.getElementById('question_container').style.display = 'none';
+    document.getElementById('answer_container').style.display = 'table-cell';
+  }
+
+  function flipAnswer() {
+    document.getElementById('answer_container').style.display = 'none';
+    document.getElementById('question_container').style.display = 'table-cell';
+  }
+
+  function memorise() {
+    console.log('Memorising page');
+    google.script.run.withSuccessHandler(function (card) {
+      if (card === 'Nothing to learn') {
+        alert('You\'ve learned all words');
+        init();
+      } else {
+        console.log(`Memorising card: ${card}`);
+        resetBaseContainer();
+        addLargeButton('X', 'init()');
+        addLargeButton('Edit card', `editCard(${card[0]}, "${card[1].replaceAll('\n', '&#10;')}", "${card[2].replaceAll('\n', '&#10;')}")`);
+        addBr();
+        addCardContainer(card);
+        addLargeButton('Reject', `rejectCard(${card[0]})`);
+        addLargeButton('Accept', `acceptCard(${card[0]})`);
+      }
+    }).getCards();
+  }
+
+  function loading() {
+    addCardContainer(['', 'Loading new card...', 'Loading new card...']);
+  }
+
+  function rejectCard(index) {
+    resetBaseContainer();
+    loading();
+    google.script.run.withSuccessHandler(memorise).finaliseSession(index, false);
+  }
+
+  function acceptCard(index) {
+    resetBaseContainer();
+    loading();
+    google.script.run.withSuccessHandler(memorise).finaliseSession(index, true);
+  }
+
+  function editCard(id, q, a) {
+    console.log('Card edit page');
+    resetBaseContainer();
+    addInput('Question');
+    let questionInput = document.getElementById('Question')
+    questionInput.value = q.replaceAll('&#10;', '\n');
+    addBr();
+    addInput('Answer');
+    let answerInput = document.getElementById('Answer')
+    answerInput.value = a.replaceAll('&#10;', '\n');
+    addBr();
+    addLargeButton('X', `memorise()`);
+    addLargeButton('Submit', `submitEditCard(${id})`);
+  }
+
+  function submitEditCard(id) {
+    const qa = getQaValues();
+    google.script.run.withSuccessHandler(memorise).editCard(id, qa[0], qa[1]);
+  }
+
+</script>
 </body>
 </html>
