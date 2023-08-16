@@ -30,10 +30,11 @@ if (intervalsSheet == null) {
   intervalsSheet.getRange(1, 1, 7, 1).setValues([[1], [3], [7], [30], [60], [180], [360]]);
 }
 
-const intervalColumnIndex = 4;
-const repetitionDateColumnIndex = 3;
 const questionColumnIndex = 1;
 const answerColumnIndex = 2;
+const repetitionDateColumnIndex = 3;
+const intervalColumnIndex = 4;
+const isCardFlippedColumnIndex = 5;
 
 const intervals = intervalsSheet.getDataRange().getValues().map(function (interval) {return interval[0];}).sort(function (a, b) {return a - b;});
 const today = new Date();
@@ -57,7 +58,7 @@ function editCard(id, question, answer) {
 
 // TODO a card should also be removed in FE when sending request
 function removeCard(id) {
-  console.log(`Updating card: ${id}`);
+  console.log(`Removing card: ${id}`);
   cardsSheet.getRange(id, 1, 1, answerColumnIndex).clearContent();
 }
 
@@ -70,7 +71,7 @@ function getCards() {
     if (new Date(card[repetitionDateColumnIndex - 1]) <= today || card[repetitionDateColumnIndex - 1] === '') {
       return [
         i,
-        card[questionColumnIndex - 1], // TODO deal with multiline question/answer in FE
+        card[questionColumnIndex - 1],
         card[answerColumnIndex - 1],
       ];
     }
@@ -85,28 +86,42 @@ function finaliseSession(id, isLearned) {
   let intervalCell = cardsSheet.getRange(id, intervalColumnIndex);
   let currentInterval = intervalCell.getValue();
   if (isLearned) {
-    let exceedsLastInterval = true;
-    for (let newInterval of intervals) {
-      if (newInterval > currentInterval) {
-        console.log('The card was successfully learned');
-        console.log(`Setting new repetition interval '${newInterval}' instead of '${currentInterval}'`);
-        intervalCell.setValue(newInterval);
-        let newDate = getDatePlusInterval(newInterval);
-        console.log(`Setting new repetition date: ${newDate}`);
-        cardsSheet.getRange(id, repetitionDateColumnIndex).setValue(newDate);
-        exceedsLastInterval = false;
-        break;
+    let isCardFlippedCell = cardsSheet.getRange(id, isCardFlippedColumnIndex);
+    let isCardFlipped = isCardFlippedCell.getValue();
+    let newInterval;
+
+    if (isCardFlipped === 'flipped') {
+      let exceedsLastInterval = true;
+      for (let interval of intervals) {
+        if (interval > currentInterval) {
+          console.log('The card was successfully learned');
+          console.log(`Setting new repetition interval '${interval}' instead of '${currentInterval}'`);
+          newInterval = interval;
+          exceedsLastInterval = false;
+          break;
+        }
       }
+      if (exceedsLastInterval) {
+        console.log('The card has reached latest repetition interval');
+        newInterval = intervals[intervals.length - 1];
+        console.log(`Resetting repetition interval: ${newInterval}`);
+      }
+      isCardFlippedCell.setValue('');
+    } else {
+      newInterval = currentInterval;
+      isCardFlippedCell.setValue('flipped');
     }
-    if (exceedsLastInterval) {
-      console.log('The card has reached latest repetition interval');
-      let newInterval = intervals[intervals.length - 1];
-      console.log(`Resetting repetition interval: ${newInterval}`);
-      intervalCell.setValue(newInterval);
-      let newDate = getDatePlusInterval(newInterval);
-      console.log(`Setting new repetition date: ${newDate}`);
-      cardsSheet.getRange(id, repetitionDateColumnIndex).setValue(newDate);
-    }
+    intervalCell.setValue(newInterval);
+    let newDate = getDatePlusInterval(newInterval);
+    console.log(`Setting new repetition date: ${newDate}`);
+    cardsSheet.getRange(id, repetitionDateColumnIndex).setValue(newDate);
+    console.log(`Flipping q/a for card: ${id}`);
+    let questionCell = cardsSheet.getRange(id, questionColumnIndex);
+    let answerCell = cardsSheet.getRange(id, answerColumnIndex);
+    let question = questionCell.getValue();
+    let answer = answerCell.getValue();
+    answerCell.setValue(question);
+    questionCell.setValue(answer);
   } else {
     console.log('The card was not learned');
     intervalCell.setValue(intervals[0]);
