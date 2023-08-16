@@ -85,7 +85,7 @@ function finaliseSession(id, isLearned) {
   console.log(`Id: ${id}`);
   let intervalCell = cardsSheet.getRange(id, intervalColumnIndex);
   let currentInterval = intervalCell.getValue();
-  if (isLearned) {
+  if (isLearned && currentInterval !== '') {
     let isCardFlippedCell = cardsSheet.getRange(id, isCardFlippedColumnIndex);
     let isCardFlipped = isCardFlippedCell.getValue();
     let newInterval;
