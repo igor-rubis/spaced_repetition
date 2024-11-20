@@ -11,4 +11,5 @@
 1. Deploy -> New deployment ![img_3.png](img_3.png)
 2. Click `Deploy` -> Authorize access once again
 3. Use provided URL to access the UI ![img_4.png](img_4.png)
-Use URL: https://script.google.com/macros/s/AKfycbybQOn_D3B9sVC8aGN5XxGAnrYJR-Bh0OYnBIltA3aW17q_GtvDgVyE6K_P7BlVu4sL/exec (https://shorturl.at/cWv4M)
+A URL to see how it looks like:
+https://script.google.com/macros/s/AKfycbybQOn_D3B9sVC8aGN5XxGAnrYJR-Bh0OYnBIltA3aW17q_GtvDgVyE6K_P7BlVu4sL/exec (https://shorturl.at/cWv4M)
