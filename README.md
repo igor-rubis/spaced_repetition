@@ -1,6 +1,7 @@
 # spaced_repetition
 
 ## installation:
+All this should be done from a computer, not a mobile device since it doesn't show the scripts editing menu
 1. copy document from https://docs.google.com/spreadsheets/d/1uXREnVDOB9R-B1yn2z1AV284HbB9LqD5yPeMKQ1ZBYY/edit?usp=sharing (https://shorturl.at/kMpZj)
 2. open document -> Extensions -> Apps Script
 3. Select `test` and click `Run`![img.png](img.png)
